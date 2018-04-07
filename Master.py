@@ -37,7 +37,7 @@ def main():
     target_prob = []
     target_val = []
     max_count = copy.copy(train_count + Param.STOP_COUNT)
-    while train_count < max_count:
+    while train_count <= max_count:
         data_packet = training_worker(model, Param.MCTS_SIMULATION_COUNT)
         for data_set in data_packet:
             input_state.append(data_set[0][0, :, :, :])
