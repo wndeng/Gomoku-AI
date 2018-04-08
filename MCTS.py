@@ -43,8 +43,7 @@ class MCTS_state:
         # robust because these states are game-wise identical
         # first NN input is for this state, second NN input is a new set of data created by reversing the placement
         # of white and black input layers, and reversing the final z value. The input state is re-scrambled.
-        NN_input_scrambled1 = np.zeros((1, 2, 19, 19), dtype=np.int32)
-        NN_input_scrambled2 = np.zeros((1, 2, 19, 19), dtype=np.int32)
+        NN_input_scrambled = np.zeros((1, 2, 19, 19), dtype=np.int32)
 
         # Assign ind for layers. The player's own layer is on top (ind = 0)
         if player == 1:
@@ -61,18 +60,14 @@ class MCTS_state:
                 if this_board_state.state[i,j] == 'O':
                     NN_input[0, white, i, j] = 1
                 if scrambled_board_state1.state[i,j] == 'X':
-                    NN_input_scrambled1[0, black, i, j] = 1
+                    NN_input_scrambled[0, black, i, j] = 1
                 if scrambled_board_state1.state[i,j] == 'O':
-                    NN_input_scrambled1[0, white, i, j] = 1
-                if scrambled_board_state2.state[i, j] == 'X':
-                    NN_input_scrambled2[0, black, i, j] = 1
-                if scrambled_board_state2.state[i, j] == 'O':
-                    NN_input_scrambled2[0, white, i, j] = 1
+                    NN_input_scrambled[0, white, i, j] = 1
+
 
         value, prob = model.predict(NN_input)
 
-        self.NN_input1 = NN_input_scrambled1
-        self.NN_input2 = NN_input_scrambled2
+        self.NN_input = NN_input_scrambled
         self.edge_prob = prob.flatten()
         self.edges = []
         self.action_value = value.flatten()
@@ -282,18 +277,7 @@ class MCTS:
         return self.game_instance.get_new_board_state(root, edge, player)
 
     def add_MCTS_data(self, state):
-        # To increase amount of data, I chose to append two training sets per iteration. The first set is directly from
-        # The state. The second is a differently scrambled NN input, with the input data layer switched. When finalizing
-        # this set, the appended z value will be the opposite of the first set. This is based on the fact that the
-        # player are directly adversarial, so +1 for first player means -1 for the other player, and thus the state from
-        # the perspective of the other player can also be used as a data set by switching the final z value.
-
-        self.data_set.append((copy.copy(state.NN_input1), copy.copy(state.MCTS_data), copy.copy(state.player)))
-        temp_data = copy.copy(state.MCTS_data)
-        temp_layer = temp_data[0]
-        temp_data[0] = temp_data[1]
-        temp_data[1] = temp_layer
-        self.data_set.append((copy.copy(state.NN_input2), temp_data, copy.copy(state.player))) # Player irrelevant here
+        self.data_set.append((copy.copy(state.NN_input), copy.copy(state.MCTS_data), copy.copy(state.player)))
 
     def run(self):
         # Run the MCTS, set tau according to Constant_Parameters.py, and process data to be returned
