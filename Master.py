@@ -27,17 +27,22 @@ def main():
     # Load previously computed model either by hand, from Param, or start at 0. Load weights can be synchronized with
     # param.TRAIN_COUNT_START, so one can stop and restart training from their last saved model
 
-    name = "Iteration_" + str(Param.TRAIN_COUNT_START) + "_.hdf5"
-    if Param.TRAIN_COUNT_START == 0:
+    file = open("iteration.txt", 'r+')
+    count_start = int(file.readline())
+    file.close()
+
+
+    name = "Iteration_" + str(count_start) + "_.hdf5"
+    if count_start == 0:
         model.save("Iteration_0_.hdf5")
 
     network.model.load_weights(name) # Replace argument with name if want automatic weight loading
-    train_count = copy.copy(Param.TRAIN_COUNT_START + 1)
+    train_count = count_start + 1
     input_state = []
     target_prob = []
     target_val = []
     max_count = copy.copy(train_count + Param.STOP_COUNT)
-    while train_count <= max_count:
+    while train_count < max_count:
         data_packet = training_worker(model, Param.MCTS_SIMULATION_COUNT)
         for data_set in data_packet:
             input_state.append(data_set[0][0, :, :, :])
@@ -55,7 +60,6 @@ def main():
         if len(input_state) > Param.INITIAL_DATA_SEED:
             network.train(input_state, target_val,target_prob, train_count)
             train_count += 1
-
 
 main()
 

@@ -65,7 +65,13 @@ class NeuralNetwork:
     def checkpoint(self, iteration, name):
         # Callback used for saving the model at set interval
         if iteration % Param.SAVE_INTERVAL == 0:
-            Param.TRAIN_COUNT_START += Param.SAVE_INTERVAL # Update Param.TRAIN_COUNT_START for automatic restart
+            file = open("iteration.txt", 'r+')
+            current_count = int(file.readline())
+            file.close()
+            open("iteration.txt", 'w').close()
+            file = open("iteration.txt", 'r+')
+            file.write(str(current_count + Param.SAVE_INTERVAL))
+            file.close()
             return [ModelCheckpoint(name,
                                     verbose=1,
                                     save_best_only=False,
